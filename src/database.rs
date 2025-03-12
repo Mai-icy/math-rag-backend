@@ -60,6 +60,16 @@ pub fn add_new_session(pool: &DbPool, new_session: &NewSession) -> Result<usize,
         .execute(&mut conn)
 }
 
+pub fn get_session_by_session_id(pool: &DbPool, session_uuid: Uuid) -> Result<Session, diesel::result::Error>{
+    let mut conn = pool.get().map_err(|_| diesel::result::Error::DatabaseError(
+        diesel::result::DatabaseErrorKind::UnableToSendCommand,
+        Box::new("Failed to get DB connection".to_string()),
+    ))?;
+
+    user_sessions::table.filter(user_sessions::session_id.eq(session_uuid))
+        .first::<Session>(&mut conn)
+}
+
 pub fn update_expries_by_session(pool: &DbPool, session_uuid: Uuid, expries_time: NaiveDateTime) -> Result<usize, diesel::result::Error> {
     let mut conn = pool.get().map_err(|_| diesel::result::Error::DatabaseError(
         diesel::result::DatabaseErrorKind::UnableToSendCommand,

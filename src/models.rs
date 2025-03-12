@@ -1,6 +1,7 @@
 use diesel::prelude::*;
 use chrono::{NaiveDateTime, Duration};
 use uuid::Uuid;
+use serde::Deserialize;
 use crate::schema::*;
 
 use crate::utils::*;
@@ -22,7 +23,7 @@ pub struct Session {
     user_id: Uuid,
     token: String,
     created_at: Option<NaiveDateTime>,
-    expires_at: Option<NaiveDateTime>
+    expires_at: NaiveDateTime
 }
 
 #[derive(Queryable)]
@@ -129,4 +130,16 @@ impl NewChat{
             created_at: Some(now())
         }
     }
+}
+
+
+#[derive(Deserialize)]
+pub struct LoginPayload {
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(Deserialize)]
+pub struct NewChatPayload {
+    pub title: String,
 }
