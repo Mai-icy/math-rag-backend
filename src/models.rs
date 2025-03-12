@@ -1,7 +1,9 @@
 use diesel::prelude::*;
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Duration};
 use uuid::Uuid;
 use crate::schema::*;
+
+use crate::utils::*;
 
 
 #[derive(Queryable)]
@@ -78,4 +80,53 @@ pub struct NewChat{
     user_id: Uuid,
     title: String,
     created_at: Option<NaiveDateTime>,
+}
+
+
+impl NewUser {
+    pub fn new(username: String, email: String, password: String) -> Self {
+        let hashed_password = hash_password(&password).unwrap();
+        Self {
+            user_id: generate_uuid(),
+            username,
+            email,
+            password_hash: hashed_password,
+            created_at: Some(now())
+        }
+    }
+}
+
+impl NewSession{
+    pub fn new(sessionid: Uuid, userid: Uuid, token: &String) -> Self {
+        Self{
+            session_id: sessionid,
+            user_id: userid,
+            token: token.to_string(),
+            created_at: Some(now()),
+            expires_at: Some(now().checked_add_signed(Duration::days(1)).unwrap())
+        }
+    }
+}
+
+impl NewMessage{
+    pub fn new(messageid: Uuid, chatid: Uuid, role: &String, content_: &String) -> Self{
+        Self{
+            message_id: messageid,
+            chat_id: chatid,
+            role: role.to_string(),
+            content: content_.to_string(),
+            timestamp: Some(now()),
+        }
+    }
+}
+
+impl NewChat{
+    pub fn new(chatid: Uuid, userid: Uuid, title: &String) -> Self{
+        Self{
+            chat_id: chatid,
+            user_id: userid,
+            title: title.to_string(),
+            created_at: Some(now())
+        }
+    }
 }

@@ -6,8 +6,8 @@ pub fn hash_password(password: &str) -> Result<String, bcrypt::BcryptError> {
     hash(password, DEFAULT_COST)
 }
 
-pub fn generate_uuid() -> String {
-    Uuid::new_v4().to_string()
+pub fn generate_uuid() -> Uuid {
+    Uuid::new_v4()
 }
 
 pub fn now() -> NaiveDateTime {
