@@ -10,6 +10,7 @@ mod handlers;
 mod models;
 mod utils;
 mod middleware;
+mod xunfei_ocr;
 
 
 pub fn config(cfg: &mut web::ServiceConfig) {
