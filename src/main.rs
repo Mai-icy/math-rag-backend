@@ -1,14 +1,15 @@
 use actix_web::{web, HttpServer, App};
-use database::{add_new_user, init_pool};
-use models::NewUser;
-use schema::users::password_hash;
-use crate::handlers::{handle_login, handle_register};
+use actix_web::middleware::from_fn;
+use database::init_pool;
+use crate::handlers::{handle_login, handle_register, index};
+use middleware::auth_middleware;
 
 mod database;
 mod schema;
 mod handlers;
 mod models;
 mod utils;
+mod middleware;
 
 
 pub fn config(cfg: &mut web::ServiceConfig) {
@@ -16,6 +17,11 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         web::scope("/v1/auth")
             .route("/register", web::post().to(handle_register))
             .route("/login", web::post().to(handle_login)),
+    );
+    cfg.service(
+        web::scope("/v1/chat")
+            .wrap(from_fn(auth_middleware))
+            .route("/index", web::get().to(index))
     );
 }
 
@@ -27,6 +33,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(pool_data.clone()))
             .configure(config)
+            .route("/", web::get().to(index).wrap(from_fn(auth_middleware)))
     })
     .bind("127.0.0.1:8080")?
     .run()

@@ -1,10 +1,25 @@
+use actix_web::{HttpMessage, HttpRequest};
 use actix_web::{web, HttpResponse, Responder, http::header};
 use crate::models::*;
 use crate::database::*;
-use crate::utils::generate_jwt;
-use crate::utils::{generate_uuid};
+use crate::utils::{generate_jwt, generate_uuid};
+use uuid::Uuid;
 use serde_json::json;
 use bcrypt::verify;
+
+pub async fn index(req: HttpRequest) -> impl Responder {
+    // for test
+    let is_auth = req.extensions().get::<bool>().unwrap().clone();
+    if !is_auth{
+        return HttpResponse::NotFound().body("not good");
+    }
+
+    let sessionid = req.extensions().get::<Uuid>().unwrap().clone();
+    print!("{}", sessionid.to_string());
+    let mut text = String::from("hello");
+    text.push_str(&sessionid.to_string());
+    HttpResponse::Ok().body(text)
+}
 
 pub async fn handle_login(
     pool: web::Data<DbPool>,
