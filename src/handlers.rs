@@ -2,6 +2,7 @@ use actix_web::{HttpMessage, HttpRequest};
 use actix_web::{web, HttpResponse, Responder, http::header};
 use crate::models::*;
 use crate::database::*;
+use crate::schema::chats::title;
 use crate::utils::{generate_jwt, generate_uuid};
 use uuid::Uuid;
 use serde_json::json;
@@ -58,8 +59,6 @@ pub async fn handle_register(
     pool: web::Data<DbPool>,
     payload: web::Json<RegisterPayload>,
 ) -> impl Responder {
-    println!("received {} {}", payload.username, payload.password);
-
     let user = get_user_by_username(&pool, &payload.username);
 
     if !matches!(user, Err(diesel::result::Error::NotFound)) {
@@ -68,7 +67,8 @@ pub async fn handle_register(
 
     let new_user = NewUser::new(&payload.username, &payload.email, &payload.password);
 
-    let _ = add_new_user(&pool, &new_user);
-
+    if let Err(err) = add_new_user(&pool, &new_user) {
+        HttpResponse::InternalServerError().json(json!({"message": err.to_string()}))
+    }else{
     HttpResponse::Ok().json(json!({"message": "注册成功"}))
 }

@@ -7,8 +7,6 @@ use serde_json::{json, Value};
 use sha2::{Sha256, Digest};
 use hmac::{Hmac, Mac};
 use base64::{engine::general_purpose, Engine as _};
-use dotenv::dotenv;
-use std::fs;
 use std::env;
 
 fn get_rfc1123_time() -> String {
