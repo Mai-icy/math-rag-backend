@@ -122,9 +122,9 @@ impl NewMessage{
 }
 
 impl NewChat{
-    pub fn new(chatid: Uuid, userid: Uuid, title: &String) -> Self{
+    pub fn new(userid: Uuid, title: &String) -> Self{
         Self{
-            chat_id: chatid,
+            chat_id: generate_uuid(),
             user_id: userid,
             title: title.to_string(),
             created_at: Some(now())

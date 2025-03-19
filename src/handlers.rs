@@ -70,5 +70,35 @@ pub async fn handle_register(
     if let Err(err) = add_new_user(&pool, &new_user) {
         HttpResponse::InternalServerError().json(json!({"message": err.to_string()}))
     }else{
-    HttpResponse::Ok().json(json!({"message": "注册成功"}))
+        HttpResponse::Ok().json(json!({"message": "注册成功"}))
+    }  
+}
+
+pub async fn chat_new(
+    req: HttpRequest,
+    pool: web::Data<DbPool>,
+    payload: web::Json<NewChatPayload>, 
+) -> impl Responder {
+    let is_auth = req.extensions().get::<bool>().unwrap().clone();
+    if !is_auth{
+        return HttpResponse::NotFound().body("not good");
+    }
+
+    if payload.title.len() < 3 {
+        return HttpResponse::BadRequest().json(json!({"message": "标题过短"}));
+    }
+
+    let session_uuid = req.extensions().get::<Uuid>().unwrap().clone();
+    let user = match get_session_by_session_id(&pool, session_uuid) {
+        Ok(data) => data,
+        Err(err) => {return HttpResponse::InternalServerError().json(json!({"message": err.to_string()}));},
+    };
+    
+    let new_chat = NewChat::new(user.user_id, &payload.title);
+
+    if let Err(err) = add_new_chat(&pool, &new_chat){
+        return HttpResponse::InternalServerError().json(json!({"message": err.to_string()}))
+    }else{
+        HttpResponse::Ok().json(json!({"message": "创建成功"}))
+    }
 }
