@@ -1,7 +1,8 @@
 use actix_web::{web, HttpServer, App};
 use actix_web::middleware::from_fn;
 use database::init_pool;
-use handlers::chat_new;
+use handlers::{chat_content, chat_new};
+use models::Chat;
 use crate::handlers::{handle_login, handle_register, index};
 use middleware::auth_middleware;
 
@@ -25,6 +26,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
             .wrap(from_fn(auth_middleware))
             .route("/index", web::get().to(index))
             .route("/new", web::get().to(chat_new))
+            .route("/v1/chat/{chat_id}", web::get().to(chat_content))
     );
 }
 

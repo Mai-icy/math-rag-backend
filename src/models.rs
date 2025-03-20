@@ -17,7 +17,7 @@ pub struct User {
 }
 
 
-#[derive(Queryable)]
+#[derive(Queryable, Clone)]
 pub struct Session {
     pub session_id: Uuid,
     pub user_id: Uuid,
