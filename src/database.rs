@@ -92,6 +92,21 @@ pub fn add_new_chat(pool: &DbPool, new_chat: &NewChat) -> Result<usize, diesel::
         .execute(&mut conn)
 }
 
+pub fn delete_chat(pool: &DbPool, chat_uuid: Uuid) -> Result<usize, diesel::result::Error> {
+    let mut conn = pool.get().map_err(|_| diesel::result::Error::DatabaseError(
+        diesel::result::DatabaseErrorKind::UnableToSendCommand,
+        Box::new("Failed to get DB connection".to_string()),
+    ))?;
+
+    conn.transaction::<_, diesel::result::Error, _>(|conn| {
+        diesel::delete(messages::table.filter(messages::chat_id.eq(chat_uuid)))
+            .execute(conn)?;
+
+        diesel::delete(chats::table.filter(chats::chat_id.eq(chat_uuid)))
+            .execute(conn)
+    })
+}
+
 pub fn get_all_chats_by_user_id(pool: &DbPool, userid: Uuid) -> Result<Vec<Chat>, diesel::result::Error>{
     let mut conn = pool.get().map_err(|_| diesel::result::Error::DatabaseError(
         diesel::result::DatabaseErrorKind::UnableToSendCommand,

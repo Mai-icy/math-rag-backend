@@ -5,7 +5,6 @@ use actix_web::{HttpMessage, HttpRequest};
 use actix_web::{web, HttpResponse, Responder, http::header};
 use crate::models::*;
 use crate::database::*;
-use crate::schema::chats::title;
 use crate::utils::{generate_jwt, generate_uuid};
 use uuid::Uuid;
 use serde_json::{json, Value};
@@ -140,7 +139,6 @@ pub async fn chat_history(
 //  /v1/chat/{chat_id}
 pub async fn chat_content(
     chat_id: web::Path<String>,
-    req: HttpRequest,
     pool: Data<DbPool>,
 ) -> impl Responder{
 
@@ -172,4 +170,19 @@ pub async fn chat_content(
     });
 
     HttpResponse::Ok().json(json!(response))
+}
+
+pub async fn chat_delete(
+    chat_id: web::Path<String>,
+    pool: Data<DbPool>,
+) -> impl Responder {
+    let chat_uuid = match Uuid::from_str(&chat_id.into_inner()) {
+        Ok(data) => data,
+        Err(_) => return HttpResponse::BadRequest().json(json!({"message": "uuid 不合法"})),
+    };
+
+    match delete_chat(&pool, chat_uuid) {
+        Ok(_) => HttpResponse::Ok().json(json!({"message": "对话删除成功"})),
+        Err(_) => HttpResponse::InternalServerError().json(json!({"message": "删除失败"})),
+    }
 }
