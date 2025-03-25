@@ -150,3 +150,8 @@ pub struct RegisterPayload {
 pub struct NewChatPayload {
     pub title: String,
 }
+
+#[derive(Deserialize)]
+pub struct OCRPalyload {
+    pub imgb64: String,
+}

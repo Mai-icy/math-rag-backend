@@ -29,6 +29,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
             .route("/history", web::get().to(chat_history))
             .route("/{chat_id}", web::get().to(chat_content))
             .route("/{chat_id}", web::delete().to(chat_delete))
+            .route("/ocr", web::post().to(ocr_handle))
     );
 }
 

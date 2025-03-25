@@ -49,7 +49,7 @@ fn assmble_header(body: Value) -> HeaderMap{
     headers
 }
 
-pub async fn formula_discern(img_base64: &String) -> Result<Value, Error> {
+async fn formula_discern(img_base64: &String) -> Result<Value, Error> {
     let url = "https://rest-api.xfyun.cn/v2/itr";
 
     let data = json!({

@@ -10,6 +10,7 @@ use uuid::Uuid;
 use serde_json::{json, Value};
 use bcrypt::verify;
 use crate::utils::{decode_jwt, now};
+use crate::xunfei_ocr::img2latex;
 
 pub async fn index(req: HttpRequest) -> impl Responder {
     // for test
@@ -216,4 +217,24 @@ pub async fn chat_delete(
         Ok(_) => HttpResponse::Ok().json(json!({"message": "对话删除成功"})),
         Err(_) => HttpResponse::InternalServerError().json(json!({"message": "删除失败"})),
     }
+}
+
+pub async fn ocr_handle(
+    req: HttpRequest,
+    payload: web::Json<OCRPalyload>,
+) -> impl Responder{
+    let is_auth = req.extensions().get::<bool>().unwrap().clone();
+    if !is_auth{
+        return HttpResponse::Unauthorized().json(json!({"message": "用户未登录"}));
+    }
+
+    let result: String = match img2latex(&payload.imgb64).await{
+        Ok(data) => data,
+        Err(err) => return HttpResponse::BadRequest().json(json!({"message": err.to_string()})),
+    };
+
+    HttpResponse::BadRequest().json(
+        json!({"message": "扫描成功", "content": result}))
+    
+
 }
