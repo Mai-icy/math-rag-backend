@@ -9,6 +9,7 @@ use crate::utils::{generate_jwt, generate_uuid};
 use uuid::Uuid;
 use serde_json::{json, Value};
 use bcrypt::verify;
+use crate::utils::{decode_jwt, now};
 
 pub async fn index(req: HttpRequest) -> impl Responder {
     // for test
@@ -57,6 +58,36 @@ pub async fn handle_login(
     }
 
 }
+
+
+pub async fn handle_logout(
+    req: HttpRequest,
+    pool: web::Data<DbPool>,
+) -> impl Responder {
+    let auth_header = req.headers().get("Authorization");
+
+    let token = match auth_header.and_then(|h| h.to_str().ok()) {
+        Some(t) => t.to_string(),
+        None => return HttpResponse::Unauthorized().json(json!({"message": "用户未登录"})),
+    };
+
+    let session_uuid = match decode_jwt(&token) {
+        Ok(uuid) => uuid,
+        Err(_) => return HttpResponse::Unauthorized().json(json!({"message": "用户未登录"})),
+    };
+
+    let _ = match get_session_by_session_id(&pool, session_uuid) {
+        Ok(session) => session,
+        Err(_) => return HttpResponse::Unauthorized().json(json!({"message": "用户未登录"})),
+    };
+
+    let response = match update_expries_by_session(&pool, session_uuid, now()) {
+        Ok(_) => HttpResponse::Ok().json(json!({"message": "已成功退出登录"})),
+        Err(_) => HttpResponse::Unauthorized().json(json!({"message": "登出失败"}))
+    };
+    response
+}
+
 
 pub async fn handle_register(
     pool: web::Data<DbPool>,

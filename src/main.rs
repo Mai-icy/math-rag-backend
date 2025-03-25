@@ -1,3 +1,4 @@
+use actix_web::web::route;
 use actix_web::{web, HttpServer, App};
 use actix_web::middleware::from_fn;
 use database::init_pool;
@@ -17,7 +18,8 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/v1/auth")
             .route("/register", web::post().to(handle_register))
-            .route("/login", web::post().to(handle_login)),
+            .route("/login", web::post().to(handle_login))
+            .route("/logout", web::post().to(handle_logout))
     );
     cfg.service(
         web::scope("/v1/chat")
