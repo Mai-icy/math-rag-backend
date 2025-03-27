@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use reqwest::Client;
 use actix_web::web::Data;
 use actix_web::{HttpMessage, HttpRequest};
 use actix_web::{web, HttpResponse, Responder, http::header};
@@ -9,6 +10,9 @@ use crate::utils::{generate_jwt, generate_uuid};
 use uuid::Uuid;
 use serde_json::{json, Value};
 use bcrypt::verify;
+use futures::TryStreamExt;
+use tokio::sync::mpsc;
+use bytes::Bytes;
 use crate::utils::{decode_jwt, now};
 use crate::xunfei_ocr::img2latex;
 
@@ -217,6 +221,43 @@ pub async fn chat_delete(
         Ok(_) => HttpResponse::Ok().json(json!({"message": "对话删除成功"})),
         Err(_) => HttpResponse::InternalServerError().json(json!({"message": "删除失败"})),
     }
+}
+
+pub async fn proxy_stream(req_body: web::Json<Value>,) -> impl Responder {
+    let client = Client::new();
+    let url = "http://localhost:5000/stream";
+
+    let res = match client.post(url).json(&req_body.0).send().await {
+        Ok(res) => res,
+        Err(_) => return HttpResponse::InternalServerError().body("Failed to connect to backend"),
+    };
+
+    let (tx, mut rx) = mpsc::channel::<Bytes>(10);
+    let mut collected_response = Vec::new();
+
+    let mut stream = res.bytes_stream();
+
+    tokio::spawn(async move {
+        while let Some(chunk) = stream.try_next().await.unwrap_or(None) {
+            collected_response.extend_from_slice(&chunk);
+
+            if tx.send(Bytes::from(chunk)).await.is_err() {
+                break;
+            }
+        }
+
+        println!("{}", String::from_utf8_lossy(&collected_response));
+    });
+
+    let response_stream = async_stream::stream! {
+        while let Some(chunk) = rx.recv().await {
+            yield Ok::<Bytes, actix_web::Error>(chunk);
+        }
+    };
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .streaming(response_stream)
 }
 
 pub async fn ocr_handle(

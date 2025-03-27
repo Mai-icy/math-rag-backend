@@ -1,4 +1,3 @@
-use actix_web::web::route;
 use actix_web::{web, HttpServer, App};
 use actix_web::middleware::from_fn;
 use database::init_pool;
@@ -35,6 +34,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    println!("database init");
     let pool_data = init_pool();
     println!("Server started at http://127.0.0.1:8080");
     HttpServer::new(move || {
