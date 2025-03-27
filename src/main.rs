@@ -23,8 +23,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/v1/chat")
             .wrap(from_fn(auth_middleware))
-            .route("/index", web::get().to(index))
-            .route("/new", web::get().to(chat_new))
+            .route("/new", web::post().to(chat_new))
             .route("/history", web::get().to(chat_history))
             .route("/{chat_id}", web::get().to(chat_content))
             .route("/{chat_id}", web::delete().to(chat_delete))
@@ -41,7 +40,6 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(pool_data.clone()))
             .configure(config)
-            .route("/", web::get().to(index).wrap(from_fn(auth_middleware)))
     })
     .bind("127.0.0.1:8080")?
     .run()

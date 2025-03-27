@@ -16,21 +16,6 @@ use bytes::Bytes;
 use crate::utils::{decode_jwt, now};
 use crate::xunfei_ocr::img2latex;
 
-pub async fn index(req: HttpRequest) -> impl Responder {
-    // for test
-    let is_auth = req.extensions().get::<bool>().unwrap().clone();
-    if !is_auth{
-        return HttpResponse::NotFound().body("not good");
-    }
-
-    let session = req.extensions().get::<Session>().unwrap().clone();
-
-    print!("{}", session.session_id.to_string());
-    let mut text = String::from("hello");
-    text.push_str(&session.session_id.to_string());
-    HttpResponse::Ok().body(text)
-}
-
 pub async fn handle_login(
     pool: web::Data<DbPool>,
     payload: web::Json<LoginPayload>,
