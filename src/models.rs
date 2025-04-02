@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 use chrono::{NaiveDateTime, Duration};
 use uuid::Uuid;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use crate::schema::*;
 
 use crate::utils::*;
@@ -110,9 +110,9 @@ impl NewSession{
 }
 
 impl NewMessage{
-    pub fn new(messageid: Uuid, chatid: Uuid, role: &String, content_: &String) -> Self{
+    pub fn new(chatid: Uuid, role: &String, content_: &String) -> Self{
         Self{
-            message_id: messageid,
+            message_id: generate_uuid(),
             chat_id: chatid,
             role: role.to_string(),
             content: content_.to_string(),
@@ -150,6 +150,13 @@ pub struct RegisterPayload {
 pub struct NewChatPayload {
     pub title: String,
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct ChatPayload {
+    pub prompt: String,
+    pub chat_id: String,
+}
+
 
 #[derive(Deserialize)]
 pub struct OCRPalyload {

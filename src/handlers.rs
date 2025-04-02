@@ -208,11 +208,22 @@ pub async fn chat_delete(
     }
 }
 
-pub async fn proxy_stream(req_body: web::Json<Value>,) -> impl Responder {
+pub async fn proxy_stream(
+    req_body: web::Json<ChatPayload>,
+    pool: Data<DbPool>
+) -> impl Responder {
     let client = Client::new();
-    let url = "http://localhost:5000/stream";
+    let url = "http://localhost:8000/stream";
 
-    let res = match client.post(url).json(&req_body.0).send().await {
+    let prompt = req_body.prompt.clone();
+    let chat_id = Uuid::from_str(&req_body.chat_id).unwrap();
+
+    let user_msg: NewMessage = NewMessage::new(chat_id, &String::from("user"), &prompt);
+    
+    let _ = add_new_message(&pool, &user_msg);
+
+
+    let res = match client.post(url).json(&req_body).send().await {
         Ok(res) => res,
         Err(_) => return HttpResponse::InternalServerError().body("Failed to connect to backend"),
     };
@@ -231,7 +242,21 @@ pub async fn proxy_stream(req_body: web::Json<Value>,) -> impl Responder {
             }
         }
 
-        println!("{}", String::from_utf8_lossy(&collected_response));
+        // println!("{}", String::from_utf8_lossy(&collected_response));
+        let json_str = String::from_utf8_lossy(&collected_response).into_owned();
+        let parsed: Value = serde_json::from_str(&json_str).unwrap();
+
+        let result: String = parsed["response"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|item| item["chunk"].as_str().unwrap_or(""))
+            .collect();
+
+        let ai_msg: NewMessage = NewMessage::new(chat_id, &String::from("assistant"), &result);
+        let _ = add_new_message(&pool, &ai_msg);
+
+        println!("{}", result);
     });
 
     let response_stream = async_stream::stream! {
