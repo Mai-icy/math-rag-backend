@@ -77,10 +77,10 @@ pub struct NewMessage{
 #[derive(Insertable)]
 #[table_name="chats"]
 pub struct NewChat{
-    chat_id: Uuid,
-    user_id: Uuid,
-    title: String,
-    created_at: Option<NaiveDateTime>,
+    pub chat_id: Uuid,
+    pub user_id: Uuid,
+    pub title: String,
+    pub created_at: Option<NaiveDateTime>,
 }
 
 

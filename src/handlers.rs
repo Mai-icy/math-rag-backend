@@ -16,6 +16,16 @@ use bytes::Bytes;
 use crate::utils::{decode_jwt, now};
 use crate::xunfei_ocr::img2latex;
 
+
+pub async fn options_handler() -> impl Responder {
+    HttpResponse::Ok()
+        .insert_header((header::ACCESS_CONTROL_ALLOW_ORIGIN, "*"))
+        .insert_header((header::ACCESS_CONTROL_ALLOW_METHODS, "POST, GET, OPTIONS"))
+        .insert_header((header::ACCESS_CONTROL_ALLOW_HEADERS, "Content-Type, Authorization"))
+        .finish()
+}
+
+
 pub async fn handle_login(
     pool: web::Data<DbPool>,
     payload: web::Json<LoginPayload>,
@@ -40,9 +50,15 @@ pub async fn handle_login(
         let new_session = NewSession::new(session_id, user.user_id, &jwt_token);
         let _ = add_new_session(&pool, &new_session);
 
+        let response_json = json!({
+            "token": jwt_token
+        });
+    
+
+
         HttpResponse::Ok()
             .insert_header((header::AUTHORIZATION, format!("Bearer {}", jwt_token)))
-            .json("Login successful")
+            .json(response_json)
     }else{
         HttpResponse::Unauthorized().json(json!({"message": "密码不正确"}))
     }
@@ -118,7 +134,7 @@ pub async fn chat_new(
     if let Err(err) = add_new_chat(&pool, &new_chat){
         return HttpResponse::InternalServerError().json(json!({"message": err.to_string()}))
     }else{
-        HttpResponse::Ok().json(json!({"message": "创建对话成功"}))
+        HttpResponse::Ok().json(json!({"message": "创建对话成功", "chat_id": new_chat.chat_id.to_string()}))
     }
 }
 

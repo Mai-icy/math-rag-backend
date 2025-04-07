@@ -3,6 +3,7 @@ use actix_web::middleware::from_fn;
 use database::init_pool;
 use handlers::*;
 use middleware::auth_middleware;
+use actix_cors::Cors;
 
 mod database;
 mod schema;
@@ -38,7 +39,13 @@ async fn main() -> std::io::Result<()> {
     let pool_data = init_pool();
     println!("Server started at http://127.0.0.1:8080");
     HttpServer::new(move || {
+        let cors = Cors::default()
+        .allow_any_origin()
+        .allow_any_method()
+        .allow_any_header();
+
         App::new()
+            .wrap(cors)
             .app_data(web::Data::new(pool_data.clone()))
             .configure(config)
     })
